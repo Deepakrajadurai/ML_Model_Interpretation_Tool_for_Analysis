@@ -46,8 +46,8 @@ const SHAPAnimatedBar: React.FC<SHAPAnimatedBarProps> = ({ x, y, width, height, 
   );
 };
 
-// Increased margins to accommodate larger values and labels
-const margin = { top: 20, right: 60, bottom: 80, left: 140 };
+// Increased right margin significantly to accommodate value labels
+const margin = { top: 20, right: 100, bottom: 80, left: 140 };
 
 export const SHAPBarChart: React.FC<SHAPBarChartProps> = ({ data, width, height }) => {
   const xMax = width - margin.left - margin.right;
@@ -60,8 +60,8 @@ export const SHAPBarChart: React.FC<SHAPBarChartProps> = ({ data, width, height 
   const minValue = Math.min(0, Math.min(...sortedData.map(d => d.value)));
   const maxValue = Math.max(...sortedData.map(d => d.value));
   
-  // Add 10% padding to the domain to ensure bars don't get cut off
-  const domainPadding = maxAbsValue * 0.1;
+  // Reduce domain padding since we have more margin space now
+  const domainPadding = maxAbsValue * 0.05;
   const domainMin = minValue - domainPadding;
   const domainMax = maxValue + domainPadding;
 
@@ -79,100 +79,102 @@ export const SHAPBarChart: React.FC<SHAPBarChartProps> = ({ data, width, height 
   return (
     <div className="w-full">
       <h4 className="text-lg font-semibold text-white mb-4">Feature Impact on Prediction</h4>
-      <div className="overflow-x-auto">
-        <svg width={width} height={height} className="min-w-full">
-          <Group left={margin.left} top={margin.top}>
-            {sortedData.map((d, i) => {
-              const barHeight = yScale.bandwidth();
-              const barY = yScale(d.feature) || 0;
-              const barWidth = Math.abs(xScale(d.value) - xScale(0));
-              const barX = d.value >= 0 ? xScale(0) : xScale(d.value);
-              const isPositive = d.value >= 0;
+      <div className="w-full overflow-hidden">
+        <div className="overflow-x-auto">
+          <svg width={Math.max(width, 600)} height={height} className="min-w-full">
+            <Group left={margin.left} top={margin.top}>
+              {sortedData.map((d, i) => {
+                const barHeight = yScale.bandwidth();
+                const barY = yScale(d.feature) || 0;
+                const barWidth = Math.abs(xScale(d.value) - xScale(0));
+                const barX = d.value >= 0 ? xScale(0) : xScale(d.value);
+                const isPositive = d.value >= 0;
 
-              return (
-                <g key={d.feature}>
-                  <SHAPAnimatedBar
-                    x={barX}
-                    y={barY}
-                    width={barWidth}
-                    height={barHeight}
-                    fill={isPositive ? '#22c55e' : '#ef4444'}
-                    delay={i * 100}
-                  />
-                  {/* Value labels at the end of bars */}
-                  <text
-                    x={isPositive ? barX + barWidth + 5 : barX - 5}
-                    y={barY + barHeight / 2}
-                    dy="0.33em"
-                    fill="#e2e8f0"
-                    fontSize={11}
-                    fontWeight="500"
-                    textAnchor={isPositive ? 'start' : 'end'}
-                  >
-                    {d.value.toFixed(3)}
-                  </text>
-                </g>
-              );
-            })}
-            
-            {/* Zero line */}
-            <line
-              x1={xScale(0)}
-              x2={xScale(0)}
-              y1={0}
-              y2={yMax}
-              stroke="#64748b"
-              strokeWidth={2}
-              strokeDasharray="4,4"
-            />
+                return (
+                  <g key={d.feature}>
+                    <SHAPAnimatedBar
+                      x={barX}
+                      y={barY}
+                      width={barWidth}
+                      height={barHeight}
+                      fill={isPositive ? '#22c55e' : '#ef4444'}
+                      delay={i * 100}
+                    />
+                    {/* Value labels positioned within the margin area */}
+                    <text
+                      x={isPositive ? Math.min(barX + barWidth + 8, xMax - 5) : Math.max(barX - 8, 5)}
+                      y={barY + barHeight / 2}
+                      dy="0.33em"
+                      fill="#e2e8f0"
+                      fontSize={11}
+                      fontWeight="500"
+                      textAnchor={isPositive ? 'start' : 'end'}
+                    >
+                      {d.value.toFixed(3)}
+                    </text>
+                  </g>
+                );
+              })}
+              
+              {/* Zero line */}
+              <line
+                x1={xScale(0)}
+                x2={xScale(0)}
+                y1={0}
+                y2={yMax}
+                stroke="#64748b"
+                strokeWidth={2}
+                strokeDasharray="4,4"
+              />
 
-            <AxisLeft
-              scale={yScale}
-              stroke="#64748b"
-              tickStroke="#64748b"
-              tickLabelProps={{
-                fill: '#e2e8f0',
-                fontSize: 11,
-                textAnchor: 'end',
-                dy: '0.33em',
-              }}
-            />
+              <AxisLeft
+                scale={yScale}
+                stroke="#64748b"
+                tickStroke="#64748b"
+                tickLabelProps={{
+                  fill: '#e2e8f0',
+                  fontSize: 11,
+                  textAnchor: 'end',
+                  dy: '0.33em',
+                }}
+              />
+              
+              <AxisBottom
+                top={yMax}
+                scale={xScale}
+                stroke="#64748b"
+                tickStroke="#64748b"
+                tickLabelProps={{
+                  fill: '#e2e8f0',
+                  fontSize: 10,
+                  textAnchor: 'middle',
+                }}
+                numTicks={6}
+              />
+            </Group>
             
-            <AxisBottom
-              top={yMax}
-              scale={xScale}
-              stroke="#64748b"
-              tickStroke="#64748b"
-              tickLabelProps={{
-                fill: '#e2e8f0',
-                fontSize: 10,
-                textAnchor: 'middle',
-              }}
-              numTicks={8}
-            />
-          </Group>
-          
-          <text
-            x={width / 2}
-            y={height - 20}
-            textAnchor="middle"
-            fill="#94a3b8"
-            fontSize={12}
-          >
-            SHAP Value (Impact on Model Output)
-          </text>
-          
-          <text
-            x={15}
-            y={height / 2}
-            textAnchor="middle"
-            fill="#94a3b8"
-            fontSize={12}
-            transform={`rotate(-90, 15, ${height / 2})`}
-          >
-            Features
-          </text>
-        </svg>
+            <text
+              x={Math.max(width, 600) / 2}
+              y={height - 20}
+              textAnchor="middle"
+              fill="#94a3b8"
+              fontSize={12}
+            >
+              SHAP Value (Impact on Model Output)
+            </text>
+            
+            <text
+              x={15}
+              y={height / 2}
+              textAnchor="middle"
+              fill="#94a3b8"
+              fontSize={12}
+              transform={`rotate(-90, 15, ${height / 2})`}
+            >
+              Features
+            </text>
+          </svg>
+        </div>
       </div>
       
       <div className="mt-4 flex items-center justify-center space-x-6">

@@ -57,8 +57,8 @@ export const TabularAnalysis: React.FC<TabularAnalysisProps> = ({
     );
   }
 
-  // Calculate optimal chart dimensions
-  const chartWidth = Math.min(containerDimensions.width - 100, 900);
+  // Calculate optimal chart dimensions with more generous width
+  const chartWidth = Math.min(containerDimensions.width - 50, 1000);
   const chartHeight = Math.max(400, Math.min(600, features.length * 40 + 160));
 
   return (
