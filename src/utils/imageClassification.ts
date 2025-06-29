@@ -25,8 +25,14 @@ export async function analyzeImage(imageFile: File): Promise<ImageAnalysisResult
       return;
     }
 
+    // Create object URL for the image
+    const objectUrl = URL.createObjectURL(imageFile);
+
     img.onload = () => {
       try {
+        // Clean up object URL after loading
+        URL.revokeObjectURL(objectUrl);
+        
         // Set canvas size
         canvas.width = Math.min(img.width, 224);
         canvas.height = Math.min(img.height, 224);
@@ -50,23 +56,17 @@ export async function analyzeImage(imageFile: File): Promise<ImageAnalysisResult
           imageType: analysis.imageType
         });
       } catch (error) {
+        URL.revokeObjectURL(objectUrl);
         reject(error);
       }
     };
 
     img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
       reject(new Error('Failed to load image'));
     };
 
-    // Create object URL for the image
-    const objectUrl = URL.createObjectURL(imageFile);
     img.src = objectUrl;
-    
-    // Clean up object URL after loading
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      img.onload(); // Call the original onload
-    };
   });
 }
 
