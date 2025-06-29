@@ -22,28 +22,95 @@ export const PDFAnalysis: React.FC<PDFAnalysisProps> = ({
   useEffect(() => {
     const extractTextFromPDF = async () => {
       try {
+        // Check file size (limit to 100MB)
+        if (file.size > 100 * 1024 * 1024) {
+          setError('PDF file is too large. Please upload a file smaller than 100MB.');
+          setLoading(false);
+          return;
+        }
+
         const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        
+        if (arrayBuffer.byteLength === 0) {
+          setError('The PDF file appears to be empty or corrupted.');
+          setLoading(false);
+          return;
+        }
+
+        const pdf = await pdfjsLib.getDocument({ 
+          data: arrayBuffer,
+          // Add error handling options
+          verbosity: 0, // Reduce console output
+          maxImageSize: 1024 * 1024, // Limit image size to 1MB
+          disableFontFace: true, // Disable font loading for better performance
+        }).promise;
         
         setPageCount(pdf.numPages);
         
+        if (pdf.numPages === 0) {
+          setError('The PDF file contains no pages.');
+          setLoading(false);
+          return;
+        }
+        
         let fullText = '';
         
-        // Extract text from all pages
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item: any) => item.str)
-            .join(' ');
-          fullText += pageText + '\n\n';
+        // Extract text from all pages (limit to first 50 pages for performance)
+        const maxPages = Math.min(pdf.numPages, 50);
+        
+        for (let i = 1; i <= maxPages; i++) {
+          try {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items
+              .map((item: any) => {
+                // Handle different types of text items
+                if (typeof item.str === 'string') {
+                  return item.str;
+                }
+                return '';
+              })
+              .join(' ');
+            
+            if (pageText.trim()) {
+              fullText += pageText + '\n\n';
+            }
+          } catch (pageError) {
+            console.warn(`Error extracting text from page ${i}:`, pageError);
+            // Continue with other pages even if one fails
+          }
+        }
+        
+        if (fullText.trim().length === 0) {
+          setError('No readable text found in the PDF. The document might contain only images or be password-protected.');
+          setLoading(false);
+          return;
+        }
+        
+        if (pdf.numPages > 50) {
+          fullText += `\n\n[Note: Only the first 50 pages of ${pdf.numPages} total pages were processed for performance reasons.]`;
         }
         
         setExtractedText(fullText);
         setLoading(false);
       } catch (err) {
         console.error('Error extracting PDF text:', err);
-        setError('Failed to extract text from PDF. The file might be corrupted or password-protected.');
+        
+        // Provide more specific error messages
+        if (err instanceof Error) {
+          if (err.message.includes('Invalid PDF')) {
+            setError('The file is not a valid PDF document.');
+          } else if (err.message.includes('password')) {
+            setError('The PDF is password-protected. Please provide an unlocked version.');
+          } else if (err.message.includes('corrupt')) {
+            setError('The PDF file appears to be corrupted.');
+          } else {
+            setError(`Failed to process PDF: ${err.message}`);
+          }
+        } else {
+          setError('Failed to extract text from PDF. The file might be corrupted, password-protected, or contain only images.');
+        }
+        
         setLoading(false);
       }
     };
@@ -81,7 +148,9 @@ export const PDFAnalysis: React.FC<PDFAnalysisProps> = ({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-3 bg-slate-700 rounded-lg">
             <div className="text-xs text-slate-400 mb-1">File Name</div>
-            <div className="text-sm font-semibold text-white truncate">{file.name}</div>
+            <div className="text-sm font-semibold text-white truncate" title={file.name}>
+              {file.name}
+            </div>
           </div>
           <div className="p-3 bg-slate-700 rounded-lg">
             <div className="text-xs text-slate-400 mb-1">Pages</div>

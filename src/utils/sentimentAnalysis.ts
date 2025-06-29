@@ -39,7 +39,17 @@ export interface SentimentResult {
   negativeWords: string[];
 }
 
+export interface OverallSentiment {
+  overall: number;
+  confidence: number;
+  distribution: { positive: number; neutral: number; negative: number };
+}
+
 export function analyzeSentiment(text: string): SentimentResult[] {
+  if (!text || typeof text !== 'string') {
+    return [];
+  }
+
   // Split text into sentences
   const sentences = text
     .split(/[.!?]+/)
@@ -119,11 +129,7 @@ export function analyzeSentiment(text: string): SentimentResult[] {
   });
 }
 
-export function getOverallSentiment(results: SentimentResult[]): {
-  overall: number;
-  confidence: number;
-  distribution: { positive: number; neutral: number; negative: number };
-} {
+export function getOverallSentiment(results: SentimentResult[]): OverallSentiment {
   if (results.length === 0) {
     return { overall: 0, confidence: 0, distribution: { positive: 0, neutral: 0, negative: 0 } };
   }

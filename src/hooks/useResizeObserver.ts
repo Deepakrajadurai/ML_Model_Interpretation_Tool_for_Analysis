@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Dimensions {
   width: number;
@@ -8,23 +8,37 @@ interface Dimensions {
 export const useResizeObserver = () => {
   const [dimensions, setDimensions] = useState<Dimensions>({ width: 0, height: 0 });
   const ref = useRef<HTMLDivElement>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+
+  const updateDimensions = useCallback((entries: ResizeObserverEntry[]) => {
+    for (const entry of entries) {
+      const { width, height } = entry.contentRect;
+      setDimensions({ width, height });
+    }
+  }, []);
 
   useEffect(() => {
     if (!ref.current) return;
 
-    const resizeObserver = new ResizeObserver(entries => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setDimensions({ width, height });
-      }
-    });
+    // Clean up previous observer if it exists
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
+    }
 
-    resizeObserver.observe(ref.current);
+    try {
+      resizeObserverRef.current = new ResizeObserver(updateDimensions);
+      resizeObserverRef.current.observe(ref.current);
+    } catch (error) {
+      console.error('Error creating ResizeObserver:', error);
+    }
 
     return () => {
-      resizeObserver.disconnect();
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
     };
-  }, []);
+  }, [updateDimensions]);
 
   return { ref, dimensions };
 };

@@ -1,12 +1,9 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
+import { OverallSentiment } from '../utils/sentimentAnalysis';
 
 interface SentimentSummaryProps {
-  overallSentiment: {
-    overall: number;
-    confidence: number;
-    distribution: { positive: number; neutral: number; negative: number };
-  };
+  overallSentiment: OverallSentiment;
   totalSentences: number;
 }
 

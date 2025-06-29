@@ -18,39 +18,85 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
   const [textContent, setTextContent] = useState<string>('');
   const [sentimentResults, setSentimentResults] = useState<SentimentResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     const reader = new FileReader();
+    
     reader.onload = (e) => {
-      const content = e.target?.result as string;
-      setTextContent(content);
-      
-      // Perform real sentiment analysis
-      const results = analyzeSentiment(content);
-      setSentimentResults(results);
+      try {
+        const content = e.target?.result as string;
+        if (!content || content.trim().length === 0) {
+          setError('The file appears to be empty or contains no readable text.');
+          setLoading(false);
+          return;
+        }
+        
+        setTextContent(content);
+        
+        // Perform real sentiment analysis
+        const results = analyzeSentiment(content);
+        setSentimentResults(results);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error processing text file:', err);
+        setError('Failed to process the text file. Please ensure it contains valid text.');
+        setLoading(false);
+      }
+    };
+    
+    reader.onerror = () => {
+      setError('Failed to read the file. Please try again.');
       setLoading(false);
     };
+    
+    // Check file size (limit to 10MB for performance)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File is too large. Please upload a file smaller than 10MB.');
+      setLoading(false);
+      return;
+    }
     
     reader.readAsText(file);
   }, [file]);
 
   const textStatistics = useMemo(() => {
     if (!textContent) return null;
-    return calculateTextStatistics(textContent);
+    try {
+      return calculateTextStatistics(textContent);
+    } catch (err) {
+      console.error('Error calculating text statistics:', err);
+      return null;
+    }
   }, [textContent]);
 
   const wordFrequencies = useMemo(() => {
     if (!textContent) return [];
-    return analyzeWordFrequency(textContent).slice(0, 50);
+    try {
+      return analyzeWordFrequency(textContent).slice(0, 50);
+    } catch (err) {
+      console.error('Error analyzing word frequency:', err);
+      return [];
+    }
   }, [textContent]);
 
   const overallSentiment = useMemo(() => {
-    return getOverallSentiment(sentimentResults);
+    try {
+      return getOverallSentiment(sentimentResults);
+    } catch (err) {
+      console.error('Error calculating overall sentiment:', err);
+      return { overall: 0, confidence: 0, distribution: { positive: 0, neutral: 0, negative: 0 } };
+    }
   }, [sentimentResults]);
 
   const keyPhrases = useMemo(() => {
     if (!textContent) return [];
-    return extractKeyPhrases(textContent, 8);
+    try {
+      return extractKeyPhrases(textContent, 8);
+    } catch (err) {
+      console.error('Error extracting key phrases:', err);
+      return [];
+    }
   }, [textContent]);
 
   if (loading) {
@@ -58,6 +104,17 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
         <p className="ml-4 text-slate-400">Analyzing text content...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+        <div className="text-center py-8">
+          <div className="text-error-500 text-lg font-semibold mb-2">Text Analysis Error</div>
+          <p className="text-slate-400">{error}</p>
+        </div>
       </div>
     );
   }
@@ -72,6 +129,8 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
       </div>
     );
   }
+
+  const chartWidth = Math.min(containerDimensions.width / 2 - 100, 400);
 
   return (
     <div className="space-y-8 animate-slide-up">
@@ -91,7 +150,7 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
         <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
           <SentimentChart
             data={sentimentResults}
-            width={Math.min(containerDimensions.width / 2 - 100, 400)}
+            width={chartWidth}
             height={300}
           />
         </div>
@@ -99,7 +158,7 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
         <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
           <WordCloud
             data={wordFrequencies}
-            width={Math.min(containerDimensions.width / 2 - 100, 400)}
+            width={chartWidth}
             height={300}
           />
         </div>
