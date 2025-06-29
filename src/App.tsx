@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Header } from './components/Header';
+import { Footer } from './components/Footer';
 import { UploadZone } from './components/UploadZone';
 import { TabularAnalysis } from './components/TabularAnalysis';
 import { ImageAnalysis } from './components/ImageAnalysis';
@@ -38,7 +39,7 @@ function App() {
   }, []);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-slate-900 text-white">
+    <div ref={containerRef} className="min-h-screen bg-slate-900 text-white flex flex-col">
       <Header 
         onRecord={handleStartRecording}
         isRecording={isRecording}
@@ -46,7 +47,7 @@ function App() {
         onReset={resetAnalysis}
       />
       
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 flex-1">
         {!dataFile ? (
           <UploadZone onUpload={handleFileUpload} />
         ) : (
@@ -65,6 +66,8 @@ function App() {
           </div>
         )}
       </main>
+
+      <Footer />
 
       <ShareModal 
         isOpen={showShareModal}
