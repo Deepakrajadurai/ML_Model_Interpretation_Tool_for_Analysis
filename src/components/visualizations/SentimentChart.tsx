@@ -4,15 +4,10 @@ import { Group } from '@visx/group';
 import { AxisBottom, AxisLeft } from '@visx/axis';
 import { scaleBand, scaleLinear } from '@visx/scale';
 import { useSpring, animated } from 'react-spring';
-
-interface SentimentData {
-  sentence: string;
-  sentiment: number;
-  confidence: number;
-}
+import { SentimentResult } from '../../utils/sentimentAnalysis';
 
 interface SentimentChartProps {
-  data: SentimentData[];
+  data: SentimentResult[];
   width: number;
   height: number;
 }
@@ -23,8 +18,8 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
   const xMax = width - margin.left - margin.right;
   const yMax = height - margin.top - margin.bottom;
 
-  // Take first 10 sentences for visualization
-  const displayData = data.slice(0, 10);
+  // Take first 15 sentences for visualization
+  const displayData = data.slice(0, 15);
 
   const xScale = scaleBand({
     domain: displayData.map((_, i) => `S${i + 1}`),
@@ -41,7 +36,7 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
 
   return (
     <div className="w-full">
-      <h4 className="text-lg font-semibold text-white mb-4">Sentiment Analysis</h4>
+      <h4 className="text-lg font-semibold text-white mb-4">Sentiment by Sentence</h4>
       <svg width={width} height={height}>
         <Group left={margin.left} top={margin.top}>
           {displayData.map((d, i) => {
@@ -52,23 +47,33 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
             const isPositive = d.sentiment >= 0;
 
             return (
-              <AnimatedRect
-                key={i}
-                x={barX}
-                y={barY}
-                width={barWidth}
-                height={barHeight}
-                fill={isPositive ? '#22c55e' : '#ef4444'}
-                opacity={0.8}
-                rx={3}
-                style={{
-                  ...useSpring({
-                    from: { height: 0, opacity: 0 },
-                    to: { height: barHeight, opacity: 0.8 },
-                    delay: i * 100,
-                  })
-                }}
-              />
+              <g key={i}>
+                <AnimatedRect
+                  x={barX}
+                  y={barY}
+                  width={barWidth}
+                  height={barHeight}
+                  fill={isPositive ? '#22c55e' : '#ef4444'}
+                  opacity={0.7 + (d.confidence * 0.3)}
+                  rx={3}
+                  style={{
+                    ...useSpring({
+                      from: { height: 0, opacity: 0 },
+                      to: { height: barHeight, opacity: 0.7 + (d.confidence * 0.3) },
+                      delay: i * 50,
+                    })
+                  }}
+                />
+                {/* Confidence indicator */}
+                <rect
+                  x={barX + barWidth - 3}
+                  y={barY}
+                  width={3}
+                  height={barHeight}
+                  fill={isPositive ? '#16a34a' : '#dc2626'}
+                  opacity={d.confidence}
+                />
+              </g>
             );
           })}
           
@@ -93,6 +98,7 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
               textAnchor: 'end',
               dy: '0.33em',
             }}
+            numTicks={5}
           />
           
           <AxisBottom
@@ -115,7 +121,7 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
           fill="#94a3b8"
           fontSize={12}
         >
-          Sentences
+          Sentences (First 15)
         </text>
         
         <text
@@ -138,6 +144,10 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 bg-error-500 rounded"></div>
           <span className="text-sm text-slate-400">Negative</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="w-2 h-4 bg-slate-600 rounded"></div>
+          <span className="text-sm text-slate-400">Confidence</span>
         </div>
       </div>
     </div>

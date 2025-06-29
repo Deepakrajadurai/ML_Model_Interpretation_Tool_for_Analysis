@@ -2,7 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { SentimentChart } from './visualizations/SentimentChart';
 import { WordCloud } from './visualizations/WordCloud';
 import { TextMetrics } from './TextMetrics';
-import { generateMockSentimentData, generateMockWordCloudData } from '../utils/mockData';
+import { SentimentSummary } from './SentimentSummary';
+import { analyzeSentiment, getOverallSentiment, SentimentResult } from '../utils/sentimentAnalysis';
+import { analyzeWordFrequency, calculateTextStatistics, extractKeyPhrases } from '../utils/textAnalysis';
 
 interface TextAnalysisProps {
   file: File;
@@ -14,8 +16,7 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
   containerDimensions 
 }) => {
   const [textContent, setTextContent] = useState<string>('');
-  const [sentimentData, setSentimentData] = useState<Array<{ sentence: string; sentiment: number; confidence: number }>>([]);
-  const [wordCloudData, setWordCloudData] = useState<Array<{ text: string; value: number }>>([]);
+  const [sentimentResults, setSentimentResults] = useState<SentimentResult[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,38 +25,50 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
       const content = e.target?.result as string;
       setTextContent(content);
       
-      // Generate mock analysis data
-      const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-      const mockSentiment = generateMockSentimentData(sentences);
-      const mockWordCloud = generateMockWordCloudData(content);
-      
-      setSentimentData(mockSentiment);
-      setWordCloudData(mockWordCloud);
+      // Perform real sentiment analysis
+      const results = analyzeSentiment(content);
+      setSentimentResults(results);
       setLoading(false);
     };
     
     reader.readAsText(file);
   }, [file]);
 
-  const textMetrics = useMemo(() => {
-    const words = textContent.split(/\s+/).filter(word => word.length > 0);
-    const sentences = textContent.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const paragraphs = textContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-    
-    return {
-      characters: textContent.length,
-      words: words.length,
-      sentences: sentences.length,
-      paragraphs: paragraphs.length,
-      avgWordsPerSentence: sentences.length > 0 ? Math.round(words.length / sentences.length) : 0,
-      readingTime: Math.ceil(words.length / 200) // Assuming 200 words per minute
-    };
+  const textStatistics = useMemo(() => {
+    if (!textContent) return null;
+    return calculateTextStatistics(textContent);
+  }, [textContent]);
+
+  const wordFrequencies = useMemo(() => {
+    if (!textContent) return [];
+    return analyzeWordFrequency(textContent).slice(0, 50);
+  }, [textContent]);
+
+  const overallSentiment = useMemo(() => {
+    return getOverallSentiment(sentimentResults);
+  }, [sentimentResults]);
+
+  const keyPhrases = useMemo(() => {
+    if (!textContent) return [];
+    return extractKeyPhrases(textContent, 8);
   }, [textContent]);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+        <p className="ml-4 text-slate-400">Analyzing text content...</p>
+      </div>
+    );
+  }
+
+  if (!textStatistics) {
+    return (
+      <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+        <div className="text-center py-8">
+          <div className="text-error-500 text-lg font-semibold mb-2">Analysis Error</div>
+          <p className="text-slate-400">Unable to analyze the text content.</p>
+        </div>
       </div>
     );
   }
@@ -63,15 +76,21 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
   return (
     <div className="space-y-8 animate-slide-up">
       <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-        <h3 className="text-2xl font-semibold text-white mb-6">Text Analysis</h3>
-        
-        <TextMetrics metrics={textMetrics} />
+        <h3 className="text-2xl font-semibold text-white mb-6">Text Analysis Dashboard</h3>
+        <TextMetrics metrics={textStatistics} />
+      </div>
+
+      <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+        <SentimentSummary 
+          overallSentiment={overallSentiment}
+          totalSentences={sentimentResults.length}
+        />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
           <SentimentChart
-            data={sentimentData}
+            data={sentimentResults}
             width={Math.min(containerDimensions.width / 2 - 100, 400)}
             height={300}
           />
@@ -79,12 +98,28 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
 
         <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
           <WordCloud
-            data={wordCloudData}
+            data={wordFrequencies}
             width={Math.min(containerDimensions.width / 2 - 100, 400)}
             height={300}
           />
         </div>
       </div>
+
+      {keyPhrases.length > 0 && (
+        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+          <h4 className="text-lg font-semibold text-white mb-4">Key Phrases</h4>
+          <div className="flex flex-wrap gap-2">
+            {keyPhrases.map((phrase, index) => (
+              <span
+                key={index}
+                className="px-3 py-1 bg-primary-600/20 text-primary-300 rounded-full text-sm border border-primary-600/30"
+              >
+                {phrase}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
         <h4 className="text-lg font-semibold text-white mb-4">Text Preview</h4>
@@ -95,6 +130,50 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
           </pre>
         </div>
       </div>
+
+      {sentimentResults.length > 0 && (
+        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
+          <h4 className="text-lg font-semibold text-white mb-4">Sentence-by-Sentence Analysis</h4>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {sentimentResults.slice(0, 20).map((result, index) => (
+              <div key={index} className="p-3 bg-slate-700 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-slate-400">Sentence {index + 1}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      result.sentiment > 0.1 
+                        ? 'bg-success-600/20 text-success-300' 
+                        : result.sentiment < -0.1 
+                        ? 'bg-error-600/20 text-error-300'
+                        : 'bg-slate-600/20 text-slate-300'
+                    }`}>
+                      {result.sentiment > 0.1 ? 'Positive' : result.sentiment < -0.1 ? 'Negative' : 'Neutral'}
+                    </span>
+                    <span className="text-xs text-slate-400">
+                      {(result.confidence * 100).toFixed(0)}% confidence
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm text-slate-300 mb-2">{result.sentence}</p>
+                {(result.positiveWords.length > 0 || result.negativeWords.length > 0) && (
+                  <div className="flex flex-wrap gap-1">
+                    {result.positiveWords.map((word, i) => (
+                      <span key={`pos-${i}`} className="text-xs px-1 py-0.5 bg-success-600/20 text-success-300 rounded">
+                        +{word}
+                      </span>
+                    ))}
+                    {result.negativeWords.map((word, i) => (
+                      <span key={`neg-${i}`} className="text-xs px-1 py-0.5 bg-error-600/20 text-error-300 rounded">
+                        -{word}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
