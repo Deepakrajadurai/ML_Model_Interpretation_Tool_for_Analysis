@@ -7,6 +7,7 @@ import { ImageAnalysis } from './components/ImageAnalysis';
 import { TextAnalysis } from './components/TextAnalysis';
 import { PDFAnalysis } from './components/PDFAnalysis';
 import { ShareModal } from './components/ShareModal';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useResizeObserver } from './hooks/useResizeObserver';
 
 export interface DataFile {
@@ -46,31 +47,39 @@ function App() {
     switch (dataFile.type) {
       case 'tabular':
         return (
-          <TabularAnalysis 
-            file={dataFile.file} 
-            containerDimensions={dimensions}
-          />
+          <ErrorBoundary>
+            <TabularAnalysis 
+              file={dataFile.file} 
+              containerDimensions={dimensions}
+            />
+          </ErrorBoundary>
         );
       case 'image':
         return (
-          <ImageAnalysis 
-            file={dataFile.file}
-            containerDimensions={dimensions}
-          />
+          <ErrorBoundary>
+            <ImageAnalysis 
+              file={dataFile.file}
+              containerDimensions={dimensions}
+            />
+          </ErrorBoundary>
         );
       case 'text':
         return (
-          <TextAnalysis 
-            file={dataFile.file}
-            containerDimensions={dimensions}
-          />
+          <ErrorBoundary>
+            <TextAnalysis 
+              file={dataFile.file}
+              containerDimensions={dimensions}
+            />
+          </ErrorBoundary>
         );
       case 'pdf':
         return (
-          <PDFAnalysis 
-            file={dataFile.file}
-            containerDimensions={dimensions}
-          />
+          <ErrorBoundary>
+            <PDFAnalysis 
+              file={dataFile.file}
+              containerDimensions={dimensions}
+            />
+          </ErrorBoundary>
         );
       default:
         return null;
@@ -78,31 +87,33 @@ function App() {
   };
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-slate-900 text-white flex flex-col">
-      <Header 
-        onRecord={handleStartRecording}
-        isRecording={isRecording}
-        hasData={!!dataFile}
-        onReset={resetAnalysis}
-      />
-      
-      <main className="container mx-auto px-4 py-8 flex-1">
-        {!dataFile ? (
-          <UploadZone onUpload={handleFileUpload} />
-        ) : (
-          <div className="animate-fade-in">
-            {renderAnalysis()}
-          </div>
-        )}
-      </main>
+    <ErrorBoundary>
+      <div ref={containerRef} className="min-h-screen bg-slate-900 text-white flex flex-col">
+        <Header 
+          onRecord={handleStartRecording}
+          isRecording={isRecording}
+          hasData={!!dataFile}
+          onReset={resetAnalysis}
+        />
+        
+        <main className="container mx-auto px-4 py-8 flex-1">
+          {!dataFile ? (
+            <UploadZone onUpload={handleFileUpload} />
+          ) : (
+            <div className="animate-fade-in">
+              {renderAnalysis()}
+            </div>
+          )}
+        </main>
 
-      <Footer />
+        <Footer />
 
-      <ShareModal 
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-      />
-    </div>
+        <ShareModal 
+          isOpen={showShareModal}
+          onClose={() => setShowShareModal(false)}
+        />
+      </div>
+    </ErrorBoundary>
   );
 }
 
