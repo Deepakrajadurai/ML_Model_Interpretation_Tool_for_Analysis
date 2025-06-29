@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.js?url';
 import { TextAnalysis } from './TextAnalysis';
 
-// Set up PDF.js worker using local package instead of CDN
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.js', import.meta.url).toString();
+// Set up PDF.js worker using direct import
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 interface PDFAnalysisProps {
   file: File;
