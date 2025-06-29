@@ -4,17 +4,13 @@ import { Target } from 'lucide-react';
 interface ClassSelectorProps {
   selectedClass: string;
   onClassChange: (className: string) => void;
+  predictions: Array<{ id: string; name: string; confidence: number }>;
 }
-
-const MOCK_CLASSES = [
-  { id: 'cat', name: 'Cat', confidence: 0.87 },
-  { id: 'dog', name: 'Dog', confidence: 0.12 },
-  { id: 'bird', name: 'Bird', confidence: 0.01 }
-];
 
 export const ClassSelector: React.FC<ClassSelectorProps> = ({
   selectedClass,
-  onClassChange
+  onClassChange,
+  predictions
 }) => {
   return (
     <div className="space-y-4">
@@ -31,7 +27,7 @@ export const ClassSelector: React.FC<ClassSelectorProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {MOCK_CLASSES.map((cls) => (
+        {predictions.map((cls) => (
           <button
             key={cls.id}
             onClick={() => onClassChange(cls.id)}
