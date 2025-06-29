@@ -12,6 +12,39 @@ interface SentimentChartProps {
   height: number;
 }
 
+interface SentimentAnimatedBarProps {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill: string;
+  opacity: number;
+  delay: number;
+}
+
+const SentimentAnimatedBar: React.FC<SentimentAnimatedBarProps> = ({ 
+  x, y, width, height, fill, opacity, delay 
+}) => {
+  const AnimatedRect = animated('rect');
+  
+  const springProps = useSpring({
+    from: { height: 0, opacity: 0 },
+    to: { height, opacity },
+    delay,
+  });
+
+  return (
+    <AnimatedRect
+      x={x}
+      y={y}
+      width={width}
+      fill={fill}
+      rx={3}
+      style={springProps}
+    />
+  );
+};
+
 const margin = { top: 20, right: 30, bottom: 60, left: 60 };
 
 export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, height }) => {
@@ -32,8 +65,6 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
     range: [yMax, 0],
   });
 
-  const AnimatedRect = animated('rect');
-
   return (
     <div className="w-full">
       <h4 className="text-lg font-semibold text-white mb-4">Sentiment by Sentence</h4>
@@ -48,21 +79,14 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
 
             return (
               <g key={i}>
-                <AnimatedRect
+                <SentimentAnimatedBar
                   x={barX}
                   y={barY}
                   width={barWidth}
                   height={barHeight}
                   fill={isPositive ? '#22c55e' : '#ef4444'}
                   opacity={0.7 + (d.confidence * 0.3)}
-                  rx={3}
-                  style={{
-                    ...useSpring({
-                      from: { height: 0, opacity: 0 },
-                      to: { height: barHeight, opacity: 0.7 + (d.confidence * 0.3) },
-                      delay: i * 50,
-                    })
-                  }}
+                  delay={i * 50}
                 />
                 {/* Confidence indicator */}
                 <rect

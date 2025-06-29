@@ -16,6 +16,36 @@ interface SHAPBarChartProps {
   height: number;
 }
 
+interface SHAPAnimatedBarProps {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  fill: string;
+  delay: number;
+}
+
+const SHAPAnimatedBar: React.FC<SHAPAnimatedBarProps> = ({ x, y, width, height, fill, delay }) => {
+  const AnimatedRect = animated('rect');
+  
+  const springProps = useSpring({
+    from: { width: 0, opacity: 0 },
+    to: { width, opacity: 0.8 },
+    delay,
+  });
+
+  return (
+    <AnimatedRect
+      x={x}
+      y={y}
+      height={height}
+      fill={fill}
+      rx={3}
+      style={springProps}
+    />
+  );
+};
+
 const margin = { top: 20, right: 30, bottom: 60, left: 120 };
 
 export const SHAPBarChart: React.FC<SHAPBarChartProps> = ({ data, width, height }) => {
@@ -35,8 +65,6 @@ export const SHAPBarChart: React.FC<SHAPBarChartProps> = ({ data, width, height 
     padding: 0.2,
   });
 
-  const AnimatedRect = animated('rect');
-
   return (
     <div className="w-full">
       <h4 className="text-lg font-semibold text-white mb-4">Feature Impact on Prediction</h4>
@@ -50,22 +78,14 @@ export const SHAPBarChart: React.FC<SHAPBarChartProps> = ({ data, width, height 
             const isPositive = d.value >= 0;
 
             return (
-              <AnimatedRect
+              <SHAPAnimatedBar
                 key={d.feature}
                 x={barX}
                 y={barY}
                 width={barWidth}
                 height={barHeight}
                 fill={isPositive ? '#22c55e' : '#ef4444'}
-                opacity={0.8}
-                rx={3}
-                style={{
-                  ...useSpring({
-                    from: { width: 0, opacity: 0 },
-                    to: { width: barWidth, opacity: 0.8 },
-                    delay: i * 100,
-                  })
-                }}
+                delay={i * 100}
               />
             );
           })}
