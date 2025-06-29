@@ -4,12 +4,14 @@ import { Footer } from './components/Footer';
 import { UploadZone } from './components/UploadZone';
 import { TabularAnalysis } from './components/TabularAnalysis';
 import { ImageAnalysis } from './components/ImageAnalysis';
+import { TextAnalysis } from './components/TextAnalysis';
+import { PDFAnalysis } from './components/PDFAnalysis';
 import { ShareModal } from './components/ShareModal';
 import { useResizeObserver } from './hooks/useResizeObserver';
 
 export interface DataFile {
   file: File;
-  type: 'tabular' | 'image';
+  type: 'tabular' | 'image' | 'text' | 'pdf';
   data?: any;
   preview?: string;
 }
@@ -21,7 +23,7 @@ function App() {
   
   const { ref: containerRef, dimensions } = useResizeObserver();
 
-  const handleFileUpload = useCallback((file: File, type: 'tabular' | 'image') => {
+  const handleFileUpload = useCallback((file: File, type: 'tabular' | 'image' | 'text' | 'pdf') => {
     setDataFile({ file, type });
   }, []);
 
@@ -38,6 +40,43 @@ function App() {
     setDataFile(null);
   }, []);
 
+  const renderAnalysis = () => {
+    if (!dataFile) return null;
+
+    switch (dataFile.type) {
+      case 'tabular':
+        return (
+          <TabularAnalysis 
+            file={dataFile.file} 
+            containerDimensions={dimensions}
+          />
+        );
+      case 'image':
+        return (
+          <ImageAnalysis 
+            file={dataFile.file}
+            containerDimensions={dimensions}
+          />
+        );
+      case 'text':
+        return (
+          <TextAnalysis 
+            file={dataFile.file}
+            containerDimensions={dimensions}
+          />
+        );
+      case 'pdf':
+        return (
+          <PDFAnalysis 
+            file={dataFile.file}
+            containerDimensions={dimensions}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div ref={containerRef} className="min-h-screen bg-slate-900 text-white flex flex-col">
       <Header 
@@ -52,17 +91,7 @@ function App() {
           <UploadZone onUpload={handleFileUpload} />
         ) : (
           <div className="animate-fade-in">
-            {dataFile.type === 'tabular' ? (
-              <TabularAnalysis 
-                file={dataFile.file} 
-                containerDimensions={dimensions}
-              />
-            ) : (
-              <ImageAnalysis 
-                file={dataFile.file}
-                containerDimensions={dimensions}
-              />
-            )}
+            {renderAnalysis()}
           </div>
         )}
       </main>

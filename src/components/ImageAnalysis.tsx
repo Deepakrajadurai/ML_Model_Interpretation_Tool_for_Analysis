@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GradCAMHeatmap } from './visualizations/GradCAMHeatmap';
 import { ClassSelector } from './ClassSelector';
 import { generateMockGradCAMData } from '../utils/mockData';
+import heic2any from 'heic2any';
 
 interface ImageAnalysisProps {
   file: File;
@@ -22,14 +23,43 @@ export const ImageAnalysis: React.FC<ImageAnalysisProps> = ({
   }, []);
 
   useEffect(() => {
-    const url = URL.createObjectURL(file);
-    setImageUrl(url);
-    
-    // Set heatmap data and loading state together to prevent timing issues
-    setHeatmapData(gradCAMData);
-    setLoading(false);
+    const processImage = async () => {
+      try {
+        let processedFile = file;
+        
+        // Check if it's a HEIC file and convert it
+        if (file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+          try {
+            const convertedBlob = await heic2any({
+              blob: file,
+              toType: 'image/jpeg',
+              quality: 0.8
+            });
+            
+            // heic2any can return an array or single blob
+            const blob = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+            processedFile = new File([blob], file.name.replace(/\.heic?$/i, '.jpg'), { type: 'image/jpeg' });
+          } catch (heicError) {
+            console.error('HEIC conversion failed:', heicError);
+            // Fall back to original file if conversion fails
+          }
+        }
+        
+        const url = URL.createObjectURL(processedFile);
+        setImageUrl(url);
+        
+        // Set heatmap data and loading state together to prevent timing issues
+        setHeatmapData(gradCAMData);
+        setLoading(false);
 
-    return () => URL.revokeObjectURL(url);
+        return () => URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error processing image:', error);
+        setLoading(false);
+      }
+    };
+
+    processImage();
   }, [file, gradCAMData]);
 
   useEffect(() => {
@@ -40,6 +70,9 @@ export const ImageAnalysis: React.FC<ImageAnalysisProps> = ({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+        <p className="ml-4 text-slate-400">
+          {file.name.toLowerCase().includes('.heic') ? 'Converting HEIC image...' : 'Loading image...'}
+        </p>
       </div>
     );
   }

@@ -33,7 +33,7 @@ export const Footer: React.FC = () => {
         </div>
 
         <div className="mt-6 pt-6 border-t border-slate-700">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
             <div>
               <h4 className="font-semibold text-white mb-2">Features</h4>
               <ul className="space-y-1 text-slate-400">
@@ -48,9 +48,19 @@ export const Footer: React.FC = () => {
               <h4 className="font-semibold text-white mb-2">Supported Formats</h4>
               <ul className="space-y-1 text-slate-400">
                 <li>CSV Files</li>
-                <li>PNG Images</li>
-                <li>JPG Images</li>
-                <li>JPEG Images</li>
+                <li>PNG/JPG/HEIC Images</li>
+                <li>Text Files</li>
+                <li>PDF Documents</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-semibold text-white mb-2">Analysis Types</h4>
+              <ul className="space-y-1 text-slate-400">
+                <li>Feature Importance</li>
+                <li>Sentiment Analysis</li>
+                <li>Document Processing</li>
+                <li>Image Classification</li>
               </ul>
             </div>
             

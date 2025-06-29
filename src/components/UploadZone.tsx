@@ -1,9 +1,9 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, Image, Zap } from 'lucide-react';
+import { Upload, FileText, Image, Zap, FileType, BookOpen } from 'lucide-react';
 
 interface UploadZoneProps {
-  onUpload: (file: File, type: 'tabular' | 'image') => void;
+  onUpload: (file: File, type: 'tabular' | 'image' | 'text' | 'pdf') => void;
 }
 
 export const UploadZone: React.FC<UploadZoneProps> = ({ onUpload }) => {
@@ -13,11 +13,18 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onUpload }) => {
 
     const isImage = file.type.startsWith('image/');
     const isCSV = file.type === 'text/csv' || file.name.endsWith('.csv');
+    const isPDF = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+    const isText = file.type.startsWith('text/') && !isCSV;
+    const isHEIC = file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
 
-    if (isImage) {
+    if (isImage || isHEIC) {
       onUpload(file, 'image');
     } else if (isCSV) {
       onUpload(file, 'tabular');
+    } else if (isPDF) {
+      onUpload(file, 'pdf');
+    } else if (isText) {
+      onUpload(file, 'text');
     }
   }, [onUpload]);
 
@@ -25,7 +32,10 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onUpload }) => {
     onDrop,
     accept: {
       'text/csv': ['.csv'],
-      'image/*': ['.png', '.jpg', '.jpeg']
+      'text/plain': ['.txt'],
+      'text/*': ['.txt', '.md', '.log'],
+      'application/pdf': ['.pdf'],
+      'image/*': ['.png', '.jpg', '.jpeg', '.heic', '.heif']
     },
     multiple: false
   });
@@ -37,8 +47,8 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onUpload }) => {
           Explore Model Explanations
         </h2>
         <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-          Upload your data to visualize SHAP explanations for tabular data or 
-          Grad-CAM heatmaps for images with smooth, interactive visualizations.
+          Upload your data to visualize SHAP explanations for tabular data, 
+          Grad-CAM heatmaps for images, sentiment analysis for text, or document analysis for PDFs.
         </p>
       </div>
 
@@ -64,7 +74,7 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onUpload }) => {
           Drag and drop a file or click to browse
         </p>
 
-        <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
           <div className="p-6 bg-slate-800 rounded-lg border border-slate-700">
             <div className="flex items-center justify-center mb-4">
               <div className="p-3 bg-secondary-600/20 rounded-full">
@@ -89,11 +99,43 @@ export const UploadZone: React.FC<UploadZoneProps> = ({ onUpload }) => {
             </div>
             <h4 className="text-lg font-semibold text-white mb-2">Images</h4>
             <p className="text-slate-400 text-sm mb-4">
-              PNG, JPG files for Grad-CAM heatmap visualization
+              PNG, JPG, HEIC files for Grad-CAM visualization
             </p>
             <div className="flex items-center text-xs text-slate-500">
               <Zap className="w-3 h-3 mr-1" />
               Smooth heatmap transitions
+            </div>
+          </div>
+
+          <div className="p-6 bg-slate-800 rounded-lg border border-slate-700">
+            <div className="flex items-center justify-center mb-4">
+              <div className="p-3 bg-primary-600/20 rounded-full">
+                <FileType className="w-8 h-8 text-primary-400" />
+              </div>
+            </div>
+            <h4 className="text-lg font-semibold text-white mb-2">Text Files</h4>
+            <p className="text-slate-400 text-sm mb-4">
+              TXT, MD files for sentiment & topic analysis
+            </p>
+            <div className="flex items-center text-xs text-slate-500">
+              <Zap className="w-3 h-3 mr-1" />
+              Word cloud & sentiment
+            </div>
+          </div>
+
+          <div className="p-6 bg-slate-800 rounded-lg border border-slate-700">
+            <div className="flex items-center justify-center mb-4">
+              <div className="p-3 bg-warning-600/20 rounded-full">
+                <BookOpen className="w-8 h-8 text-warning-400" />
+              </div>
+            </div>
+            <h4 className="text-lg font-semibold text-white mb-2">PDF Documents</h4>
+            <p className="text-slate-400 text-sm mb-4">
+              PDF files for document structure analysis
+            </p>
+            <div className="flex items-center text-xs text-slate-500">
+              <Zap className="w-3 h-3 mr-1" />
+              Text extraction & analysis
             </div>
           </div>
         </div>
