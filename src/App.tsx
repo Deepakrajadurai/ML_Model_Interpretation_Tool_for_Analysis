@@ -1,5 +1,4 @@
 import React, { useState, useCallback } from 'react';
-import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { UploadZone } from './components/UploadZone';
 import { TabularAnalysis } from './components/TabularAnalysis';
@@ -40,13 +39,6 @@ function App() {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-slate-900 text-white flex flex-col">
-      <Header 
-        onRecord={handleStartRecording}
-        isRecording={isRecording}
-        hasData={!!dataFile}
-        onReset={resetAnalysis}
-      />
-      
       <main className="container mx-auto px-4 py-8 flex-1">
         {!dataFile ? (
           <UploadZone onUpload={handleFileUpload} />
