@@ -57,6 +57,10 @@ export const TabularAnalysis: React.FC<TabularAnalysisProps> = ({
     );
   }
 
+  // Calculate optimal chart dimensions
+  const chartWidth = Math.min(containerDimensions.width - 100, 900);
+  const chartHeight = Math.max(400, Math.min(600, features.length * 40 + 160));
+
   return (
     <div className="space-y-8 animate-slide-up">
       <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
@@ -73,8 +77,8 @@ export const TabularAnalysis: React.FC<TabularAnalysisProps> = ({
       <div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
         <SHAPBarChart
           data={shapValues}
-          width={Math.min(containerDimensions.width - 100, 800)}
-          height={400}
+          width={chartWidth}
+          height={chartHeight}
         />
       </div>
     </div>
