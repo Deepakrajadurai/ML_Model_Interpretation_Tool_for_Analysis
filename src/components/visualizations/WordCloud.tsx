@@ -17,21 +17,21 @@ export const WordCloud: React.FC<WordCloudProps> = ({ data, width, height }) => 
 
   // Sort by frequency and take top words
   const sortedData = [...data].sort((a, b) => b.value - a.value).slice(0, 25);
-  const maxValue = Math.max(...sortedData.map(d => d.value));
+  const maxValue = Math.max(...sortedData.map(wordData => wordData.value));
 
   // Simple word positioning algorithm
-  const positionedWords = sortedData.map((word, index) => {
-    const fontSize = Math.max(10, Math.min(28, (word.value / maxValue) * 24 + 8));
+  const positionedWords = sortedData.map((wordData, wordIndex) => {
+    const fontSize = Math.max(10, Math.min(28, (wordData.value / maxValue) * 24 + 8));
     
     // Create a spiral pattern for better distribution
-    const angle = index * 0.5;
-    const radius = Math.sqrt(index) * 15;
-    const x = width / 2 + Math.cos(angle) * radius - fontSize * word.text.length / 4;
+    const angle = wordIndex * 0.5;
+    const radius = Math.sqrt(wordIndex) * 15;
+    const x = width / 2 + Math.cos(angle) * radius - fontSize * wordData.text.length / 4;
     const y = height / 2 + Math.sin(angle) * radius;
     
     return {
-      ...word,
-      x: Math.max(10, Math.min(x, width - fontSize * word.text.length / 2)),
+      ...wordData,
+      x: Math.max(10, Math.min(x, width - fontSize * wordData.text.length / 2)),
       y: Math.max(fontSize, Math.min(y, height - 10)),
       fontSize
     };
@@ -42,30 +42,30 @@ export const WordCloud: React.FC<WordCloudProps> = ({ data, width, height }) => 
       <h4 className="text-lg font-semibold text-white mb-4">Most Frequent Words</h4>
       <animated.div style={animationProps}>
         <svg width={width} height={height} className="bg-slate-700 rounded-lg">
-          {positionedWords.map((word, index) => (
-            <g key={word.text}>
+          {positionedWords.map((wordItem, wordIndex) => (
+            <g key={wordItem.text}>
               <text
-                x={word.x}
-                y={word.y}
-                fontSize={word.fontSize}
-                fill={`hsl(${(index * 137.5) % 360}, 70%, 65%)`}
+                x={wordItem.x}
+                y={wordItem.y}
+                fontSize={wordItem.fontSize}
+                fill={`hsl(${(wordIndex * 137.5) % 360}, 70%, 65%)`}
                 fontWeight="600"
                 className="transition-all duration-200 hover:opacity-80 cursor-pointer"
                 textAnchor="middle"
                 dominantBaseline="middle"
               >
-                {word.text}
+                {wordItem.text}
               </text>
               {/* Frequency indicator */}
               <text
-                x={word.x}
-                y={word.y + word.fontSize + 8}
-                fontSize={Math.max(8, word.fontSize * 0.3)}
+                x={wordItem.x}
+                y={wordItem.y + wordItem.fontSize + 8}
+                fontSize={Math.max(8, wordItem.fontSize * 0.3)}
                 fill="#64748b"
                 textAnchor="middle"
                 className="opacity-70"
               >
-                {word.value}
+                {wordItem.value}
               </text>
             </g>
           ))}
@@ -76,10 +76,10 @@ export const WordCloud: React.FC<WordCloudProps> = ({ data, width, height }) => 
         <div>
           <p className="text-sm text-slate-400 mb-2">Top 5 Words:</p>
           <div className="space-y-1">
-            {sortedData.slice(0, 5).map((word, index) => (
-              <div key={word.text} className="flex justify-between text-xs">
-                <span className="text-slate-300">{word.text}</span>
-                <span className="text-slate-500">{word.value} ({word.percentage.toFixed(1)}%)</span>
+            {sortedData.slice(0, 5).map((wordItem) => (
+              <div key={wordItem.text} className="flex justify-between text-xs">
+                <span className="text-slate-300">{wordItem.text}</span>
+                <span className="text-slate-500">{wordItem.value} ({wordItem.percentage.toFixed(1)}%)</span>
               </div>
             ))}
           </div>

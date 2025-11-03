@@ -67,19 +67,19 @@ export function analyzeSentiment(text: string): SentimentResult[] {
     const positiveWords: string[] = [];
     const negativeWords: string[] = [];
     
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
+    for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
+      const word = words[wordIndex];
       let multiplier = 1;
       
       // Check for intensifiers before this word
-      if (i > 0 && INTENSIFIERS.includes(words[i - 1])) {
+      if (wordIndex > 0 && INTENSIFIERS.includes(words[wordIndex - 1])) {
         multiplier = 1.5;
       }
       
       // Check for negators before this word (within 2 words)
       let isNegated = false;
-      for (let j = Math.max(0, i - 2); j < i; j++) {
-        if (NEGATORS.includes(words[j])) {
+      for (let lookbackIndex = Math.max(0, wordIndex - 2); lookbackIndex < wordIndex; lookbackIndex++) {
+        if (NEGATORS.includes(words[lookbackIndex])) {
           isNegated = true;
           break;
         }

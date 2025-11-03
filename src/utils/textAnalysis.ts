@@ -94,20 +94,20 @@ export function extractKeyPhrases(text: string, maxPhrases: number = 10): string
       .filter(word => word.length > 2 && !STOP_WORDS.has(word));
     
     // Extract 2-grams and 3-grams
-    for (let i = 0; i < words.length - 1; i++) {
-      const bigram = words.slice(i, i + 2).join(' ');
+    for (let wordIndex = 0; wordIndex < words.length - 1; wordIndex++) {
+      const bigram = words.slice(wordIndex, wordIndex + 2).join(' ');
       phrases[bigram] = (phrases[bigram] || 0) + 1;
       
-      if (i < words.length - 2) {
-        const trigram = words.slice(i, i + 3).join(' ');
+      if (wordIndex < words.length - 2) {
+        const trigram = words.slice(wordIndex, wordIndex + 3).join(' ');
         phrases[trigram] = (phrases[trigram] || 0) + 1;
       }
     }
   });
   
   return Object.entries(phrases)
-    .filter(([phrase, count]) => count > 1)
+    .filter(([_phrase, count]) => count > 1)
     .sort((a, b) => b[1] - a[1])
     .slice(0, maxPhrases)
-    .map(([phrase]) => phrase);
+    .map(([phraseText]) => phraseText);
 }

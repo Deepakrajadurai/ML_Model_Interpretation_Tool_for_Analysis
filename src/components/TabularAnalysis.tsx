@@ -13,7 +13,7 @@ export const TabularAnalysis: React.FC<TabularAnalysisProps> = ({
   file, 
   containerDimensions 
 }) => {
-  const [data, setData] = useState<any[]>([]);
+  const [csvData, setCSVData] = useState<any[]>([]);
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
   const [features, setFeatures] = useState<string[]>([]);
   const [shapValues, setSHAPValues] = useState<Array<{ feature: string; value: number }>>([]);
@@ -61,16 +61,16 @@ export const TabularAnalysis: React.FC<TabularAnalysisProps> = ({
           }
 
           setFeatures(headers);
-          setData(rows);
+          setCSVData(rows);
           setLoading(false);
-        } catch (err) {
-          console.error('Error processing CSV:', err);
+        } catch (error) {
+          console.error('Error processing CSV:', error);
           setError('Failed to process the CSV file. Please ensure it\'s properly formatted.');
           setLoading(false);
         }
       },
-      error: (error) => {
-        console.error('CSV parsing error:', error);
+      error: (parsingError) => {
+        console.error('CSV parsing error:', parsingError);
         setError('Failed to parse the CSV file. Please ensure it\'s a valid CSV format.');
         setLoading(false);
       },
@@ -82,20 +82,20 @@ export const TabularAnalysis: React.FC<TabularAnalysisProps> = ({
   }, [file]);
 
   const currentRowData = useMemo(() => {
-    if (!data[selectedRowIndex]) return {};
-    return features.reduce((acc, feature, index) => {
-      acc[feature] = data[selectedRowIndex][index] || '';
-      return acc;
+    if (!csvData[selectedRowIndex]) return {};
+    return features.reduce((accumulator, feature, index) => {
+      accumulator[feature] = csvData[selectedRowIndex][index] || '';
+      return accumulator;
     }, {} as Record<string, string>);
-  }, [data, selectedRowIndex, features]);
+  }, [csvData, selectedRowIndex, features]);
 
   useEffect(() => {
     if (features.length > 0) {
       try {
         const mockValues = generateMockSHAPValues(features);
         setSHAPValues(mockValues);
-      } catch (err) {
-        console.error('Error generating SHAP values:', err);
+      } catch (error) {
+        console.error('Error generating SHAP values:', error);
         setError('Failed to generate analysis data.');
       }
     }
@@ -131,7 +131,7 @@ export const TabularAnalysis: React.FC<TabularAnalysisProps> = ({
         <h3 className="text-2xl font-semibold text-white mb-6">SHAP Feature Importance</h3>
         
         <FeatureSelector
-          totalRows={data.length}
+          totalRows={csvData.length}
           selectedRow={selectedRowIndex}
           onRowChange={setSelectedRowIndex}
           currentRowData={currentRowData}

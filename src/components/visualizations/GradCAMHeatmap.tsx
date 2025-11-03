@@ -31,9 +31,9 @@ export const GradCAMHeatmap: React.FC<GradCAMHeatmapProps> = ({ data, width, hei
   // Transform data for visx heatmap - correct structure for HeatmapRect
   const heatmapData = data.map((row, rowIndex) => ({
     bin: rowIndex,
-    bins: row.map((value, colIndex) => ({
+    bins: row.map((cellValue, colIndex) => ({
       bin: colIndex,
-      count: value
+      count: cellValue
     }))
   }));
 
@@ -70,15 +70,15 @@ export const GradCAMHeatmap: React.FC<GradCAMHeatmapProps> = ({ data, width, hei
           >
             {(heatmap) =>
               heatmap.map((heatmapBins) =>
-                heatmapBins.map((bin) => (
+                heatmapBins.map((binData) => (
                   <rect
-                    key={`heatmap-rect-${bin.row}-${bin.column}`}
+                    key={`heatmap-rect-${binData.row}-${binData.column}`}
                     className="transition-all duration-200 hover:stroke-2 hover:stroke-white"
-                    width={bin.width}
-                    height={bin.height}
-                    x={bin.x}
-                    y={bin.y}
-                    fill={bin.color}
+                    width={binData.width}
+                    height={binData.height}
+                    x={binData.x}
+                    y={binData.y}
+                    fill={binData.color}
                   />
                 ))
               )
