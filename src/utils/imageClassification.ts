@@ -84,8 +84,8 @@ interface ImageCharacteristics {
   imageType: 'person' | 'animal' | 'object' | 'landscape' | 'unknown';
 }
 
-function analyzeImageData(data: Uint8ClampedArray, width: number, height: number): ImageCharacteristics {
-  let totalR = 0, totalG = 0, totalB = 0;
+function analyzeImageData(imageData: Uint8ClampedArray, width: number, height: number): ImageCharacteristics {
+  let totalRed = 0, totalGreen = 0, totalBlue = 0;
   let brightness = 0;
   let fleshTonePixels = 0;
   let faceStructurePixels = 0;
@@ -97,43 +97,43 @@ function analyzeImageData(data: Uint8ClampedArray, width: number, height: number
   const pixelCount = width * height;
   
   // Analyze each pixel with enhanced detection
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
+  for (let pixelIndex = 0; pixelIndex < imageData.length; pixelIndex += 4) {
+    const red = imageData[pixelIndex];
+    const green = imageData[pixelIndex + 1];
+    const blue = imageData[pixelIndex + 2];
     
-    totalR += r;
-    totalG += g;
-    totalB += b;
-    brightness += (r + g + b) / 3;
+    totalRed += red;
+    totalGreen += green;
+    totalBlue += blue;
+    brightness += (red + green + blue) / 3;
     
     // Enhanced flesh tone detection for humans
-    if (isHumanFleshTone(r, g, b)) {
+    if (isHumanFleshTone(red, green, blue)) {
       fleshTonePixels++;
     }
     
     // Face structure detection (lighter flesh tones, specific ratios)
-    if (isFaceStructure(r, g, b)) {
+    if (isFaceStructure(red, green, blue)) {
       faceStructurePixels++;
     }
     
     // Hair texture detection
-    if (isHairTexture(r, g, b)) {
+    if (isHairTexture(red, green, blue)) {
       hairPixels++;
     }
     
     // Clothing color detection
-    if (isClothingColor(r, g, b)) {
+    if (isClothingColor(red, green, blue)) {
       clothingPixels++;
     }
     
     // Animal feature detection (fur patterns, animal colors)
-    if (isAnimalFeature(r, g, b)) {
+    if (isAnimalFeature(red, green, blue)) {
       animalFeaturePixels++;
     }
     
     // Count dominant colors
-    const colorKey = `${Math.floor(r/32)*32},${Math.floor(g/32)*32},${Math.floor(b/32)*32}`;
+    const colorKey = `${Math.floor(red/32)*32},${Math.floor(green/32)*32},${Math.floor(blue/32)*32}`;
     colorCounts[colorKey] = (colorCounts[colorKey] || 0) + 1;
   }
   
@@ -145,22 +145,22 @@ function analyzeImageData(data: Uint8ClampedArray, width: number, height: number
   const animalFeaturePercentage = animalFeaturePixels / pixelCount;
   
   // Calculate averages
-  const avgR = totalR / pixelCount;
-  const avgG = totalG / pixelCount;
-  const avgB = totalB / pixelCount;
+  const averageRed = totalRed / pixelCount;
+  const averageGreen = totalGreen / pixelCount;
+  const averageBlue = totalBlue / pixelCount;
   brightness = brightness / pixelCount;
   
   // Calculate contrast
   let contrast = 0;
-  for (let i = 0; i < data.length; i += 4) {
-    const pixelBrightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+  for (let pixelIndex = 0; pixelIndex < imageData.length; pixelIndex += 4) {
+    const pixelBrightness = (imageData[pixelIndex] + imageData[pixelIndex + 1] + imageData[pixelIndex + 2]) / 3;
     contrast += Math.abs(pixelBrightness - brightness);
   }
   contrast = contrast / pixelCount;
   
   // Calculate colorfulness
   const colorfulness = Math.sqrt(
-    Math.pow(avgR - avgG, 2) + Math.pow(avgG - avgB, 2) + Math.pow(avgB - avgR, 2)
+    Math.pow(averageRed - averageGreen, 2) + Math.pow(averageGreen - averageBlue, 2) + Math.pow(averageBlue - averageRed, 2)
   );
   
   // Get dominant colors
@@ -211,91 +211,91 @@ function analyzeImageData(data: Uint8ClampedArray, width: number, height: number
   };
 }
 
-function isHumanFleshTone(r: number, g: number, b: number): boolean {
+function isHumanFleshTone(red: number, green: number, blue: number): boolean {
   // Enhanced human skin tone detection with broader range
   // Covers various ethnicities and lighting conditions
   
   // Basic flesh tone check
   const basicFlesh = (
-    r > 95 && g > 40 && b > 20 &&
-    r > g && r > b &&
-    Math.abs(r - g) > 15 &&
-    r - b > 15 &&
-    r < 255 && g < 220 && b < 180
+    red > 95 && green > 40 && blue > 20 &&
+    red > green && red > blue &&
+    Math.abs(red - green) > 15 &&
+    red - blue > 15 &&
+    red < 255 && green < 220 && blue < 180
   );
   
   // Light skin tones
   const lightSkin = (
-    r > 180 && g > 140 && b > 100 &&
-    r > g && g > b &&
-    (r - g) < 50 && (g - b) < 50
+    red > 180 && green > 140 && blue > 100 &&
+    red > green && green > blue &&
+    (red - green) < 50 && (green - blue) < 50
   );
   
   // Medium skin tones
   const mediumSkin = (
-    r > 120 && r < 200 &&
-    g > 80 && g < 160 &&
-    b > 50 && b < 120 &&
-    r > g && g >= b
+    red > 120 && red < 200 &&
+    green > 80 && green < 160 &&
+    blue > 50 && blue < 120 &&
+    red > green && green >= blue
   );
   
   // Darker skin tones
   const darkSkin = (
-    r > 60 && r < 140 &&
-    g > 40 && g < 100 &&
-    b > 20 && b < 80 &&
-    r >= g && g >= b &&
-    (r - b) > 20
+    red > 60 && red < 140 &&
+    green > 40 && green < 100 &&
+    blue > 20 && blue < 80 &&
+    red >= green && green >= blue &&
+    (red - blue) > 20
   );
   
   return basicFlesh || lightSkin || mediumSkin || darkSkin;
 }
 
-function isFaceStructure(r: number, g: number, b: number): boolean {
+function isFaceStructure(red: number, green: number, blue: number): boolean {
   // Detect face-like structures (lighter flesh tones, specific patterns)
   return (
-    r > 150 && g > 120 && b > 90 &&
-    r > g && g > b &&
-    (r - g) < 40 && (g - b) < 40 &&
-    r < 240 && g < 200 && b < 160
+    red > 150 && green > 120 && blue > 90 &&
+    red > green && green > blue &&
+    (red - green) < 40 && (green - blue) < 40 &&
+    red < 240 && green < 200 && blue < 160
   );
 }
 
-function isHairTexture(r: number, g: number, b: number): boolean {
+function isHairTexture(red: number, green: number, blue: number): boolean {
   // Hair color detection (various hair colors)
-  const brightness = (r + g + b) / 3;
+  const brightness = (red + green + blue) / 3;
   
   // Dark hair (black, dark brown)
-  const darkHair = brightness < 80 && Math.max(r, g, b) - Math.min(r, g, b) < 30;
+  const darkHair = brightness < 80 && Math.max(red, green, blue) - Math.min(red, green, blue) < 30;
   
   // Brown hair
   const brownHair = (
-    r > 60 && r < 150 &&
-    g > 40 && g < 120 &&
-    b > 20 && b < 100 &&
-    r > g && g > b
+    red > 60 && red < 150 &&
+    green > 40 && green < 120 &&
+    blue > 20 && blue < 100 &&
+    red > green && green > blue
   );
   
   // Blonde hair
   const blondeHair = (
-    r > 180 && g > 160 && b > 100 &&
-    r > g && g > b &&
-    (r - b) > 50
+    red > 180 && green > 160 && blue > 100 &&
+    red > green && green > blue &&
+    (red - blue) > 50
   );
   
   // Gray/white hair
   const grayHair = (
-    Math.abs(r - g) < 20 && Math.abs(g - b) < 20 &&
+    Math.abs(red - green) < 20 && Math.abs(green - blue) < 20 &&
     brightness > 120
   );
   
   return darkHair || brownHair || blondeHair || grayHair;
 }
 
-function isClothingColor(r: number, g: number, b: number): boolean {
+function isClothingColor(red: number, green: number, blue: number): boolean {
   // Common clothing colors and patterns
-  const brightness = (r + g + b) / 3;
-  const saturation = Math.max(r, g, b) - Math.min(r, g, b);
+  const brightness = (red + green + blue) / 3;
+  const saturation = Math.max(red, green, blue) - Math.min(red, green, blue);
   
   // Bright colors (typical clothing)
   const brightClothing = saturation > 50 && brightness > 80 && brightness < 200;
@@ -309,23 +309,23 @@ function isClothingColor(r: number, g: number, b: number): boolean {
   return brightClothing || darkClothing || lightClothing;
 }
 
-function isAnimalFeature(r: number, g: number, b: number): boolean {
+function isAnimalFeature(red: number, green: number, blue: number): boolean {
   // Animal-specific features (fur patterns, animal colors)
-  const avg = (r + g + b) / 3;
-  const variance = Math.abs(r - avg) + Math.abs(g - avg) + Math.abs(b - avg);
+  const average = (red + green + blue) / 3;
+  const variance = Math.abs(red - average) + Math.abs(green - average) + Math.abs(blue - average);
   
   // Fur-like patterns (low variance, earth tones)
   const furPattern = (
     variance < 25 &&
-    avg > 40 && avg < 160 &&
-    ((r > g && r > b && r < 180) || // Brown tones
-     (Math.abs(r - g) < 15 && Math.abs(g - b) < 15)) // Gray tones
+    average > 40 && average < 160 &&
+    ((red > green && red > blue && red < 180) || // Brown tones
+     (Math.abs(red - green) < 15 && Math.abs(green - blue) < 15)) // Gray tones
   );
   
   // Bright animal colors (birds, exotic animals)
   const brightAnimal = (
-    Math.max(r, g, b) > 200 &&
-    Math.max(r, g, b) - Math.min(r, g, b) > 100
+    Math.max(red, green, blue) > 200 &&
+    Math.max(red, green, blue) - Math.min(red, green, blue) > 100
   );
   
   return furPattern || brightAnimal;
@@ -414,22 +414,22 @@ function generatePredictions(analysis: ImageCharacteristics, fileName: string): 
   }
   
   // Remove duplicates and sort by confidence
-  const uniquePredictions = predictions.reduce((acc, current) => {
-    const existing = acc.find(item => item.id === current.id);
+  const uniquePredictions = predictions.reduce((accumulator, current) => {
+    const existing = accumulator.find(item => item.id === current.id);
     if (!existing) {
-      acc.push(current);
+      accumulator.push(current);
     } else if (current.confidence > existing.confidence) {
       existing.confidence = current.confidence;
     }
-    return acc;
+    return accumulator;
   }, [] as ClassificationResult[]);
   
   // Sort by confidence and limit to top 3
   return uniquePredictions
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, 3)
-    .map((pred, index) => ({
-      ...pred,
-      confidence: Math.min(0.95, Math.max(0.1, pred.confidence - index * 0.03))
+    .map((prediction, index) => ({
+      ...prediction,
+      confidence: Math.min(0.95, Math.max(0.1, prediction.confidence - index * 0.03))
     }));
 }

@@ -56,9 +56,9 @@ export const SHAPBarChart: React.FC<SHAPBarChartProps> = ({ data, width, height 
   const sortedData = [...data].sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
 
   // Calculate domain with padding to ensure all values fit
-  const maxAbsValue = Math.max(...sortedData.map(d => Math.abs(d.value)));
-  const minValue = Math.min(0, Math.min(...sortedData.map(d => d.value)));
-  const maxValue = Math.max(...sortedData.map(d => d.value));
+  const maxAbsValue = Math.max(...sortedData.map(dataPoint => Math.abs(dataPoint.value)));
+  const minValue = Math.min(0, Math.min(...sortedData.map(dataPoint => dataPoint.value)));
+  const maxValue = Math.max(...sortedData.map(dataPoint => dataPoint.value));
   
   // Reduce domain padding since we have more margin space now
   const domainPadding = maxAbsValue * 0.05;
@@ -71,7 +71,7 @@ export const SHAPBarChart: React.FC<SHAPBarChartProps> = ({ data, width, height 
   });
 
   const yScale = scaleBand({
-    domain: sortedData.map(d => d.feature),
+    domain: sortedData.map(dataPoint => dataPoint.feature),
     range: [0, yMax],
     padding: 0.2,
   });
@@ -83,22 +83,22 @@ export const SHAPBarChart: React.FC<SHAPBarChartProps> = ({ data, width, height 
         <div className="overflow-x-auto">
           <svg width={Math.max(width, 600)} height={height} className="min-w-full">
             <Group left={margin.left} top={margin.top}>
-              {sortedData.map((d, i) => {
+              {sortedData.map((featureData, featureIndex) => {
                 const barHeight = yScale.bandwidth();
-                const barY = yScale(d.feature) || 0;
-                const barWidth = Math.abs(xScale(d.value) - xScale(0));
-                const barX = d.value >= 0 ? xScale(0) : xScale(d.value);
-                const isPositive = d.value >= 0;
+                const barY = yScale(featureData.feature) || 0;
+                const barWidth = Math.abs(xScale(featureData.value) - xScale(0));
+                const barX = featureData.value >= 0 ? xScale(0) : xScale(featureData.value);
+                const isPositive = featureData.value >= 0;
 
                 return (
-                  <g key={d.feature}>
+                  <g key={featureData.feature}>
                     <SHAPAnimatedBar
                       x={barX}
                       y={barY}
                       width={barWidth}
                       height={barHeight}
                       fill={isPositive ? '#22c55e' : '#ef4444'}
-                      delay={i * 100}
+                      delay={featureIndex * 100}
                     />
                     {/* Value labels positioned within the margin area */}
                     <text
@@ -110,7 +110,7 @@ export const SHAPBarChart: React.FC<SHAPBarChartProps> = ({ data, width, height 
                       fontWeight="500"
                       textAnchor={isPositive ? 'start' : 'end'}
                     >
-                      {d.value.toFixed(3)}
+                      {featureData.value.toFixed(3)}
                     </text>
                   </g>
                 );

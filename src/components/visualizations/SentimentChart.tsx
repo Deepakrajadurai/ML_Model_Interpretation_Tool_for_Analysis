@@ -55,7 +55,7 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
   const displayData = data.slice(0, 15);
 
   const xScale = scaleBand({
-    domain: displayData.map((_, i) => `S${i + 1}`),
+    domain: displayData.map((_, sentenceIndex) => `S${sentenceIndex + 1}`),
     range: [0, xMax],
     padding: 0.2,
   });
@@ -70,23 +70,23 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
       <h4 className="text-lg font-semibold text-white mb-4">Sentiment by Sentence</h4>
       <svg width={width} height={height}>
         <Group left={margin.left} top={margin.top}>
-          {displayData.map((d, i) => {
+          {displayData.map((sentimentData, sentenceIndex) => {
             const barWidth = xScale.bandwidth();
-            const barHeight = Math.abs(yScale(d.sentiment) - yScale(0));
-            const barX = xScale(`S${i + 1}`) || 0;
-            const barY = d.sentiment >= 0 ? yScale(d.sentiment) : yScale(0);
-            const isPositive = d.sentiment >= 0;
+            const barHeight = Math.abs(yScale(sentimentData.sentiment) - yScale(0));
+            const barX = xScale(`S${sentenceIndex + 1}`) || 0;
+            const barY = sentimentData.sentiment >= 0 ? yScale(sentimentData.sentiment) : yScale(0);
+            const isPositive = sentimentData.sentiment >= 0;
 
             return (
-              <g key={i}>
+              <g key={sentenceIndex}>
                 <SentimentAnimatedBar
                   x={barX}
                   y={barY}
                   width={barWidth}
                   height={barHeight}
                   fill={isPositive ? '#22c55e' : '#ef4444'}
-                  opacity={0.7 + (d.confidence * 0.3)}
-                  delay={i * 50}
+                  opacity={0.7 + (sentimentData.confidence * 0.3)}
+                  delay={sentenceIndex * 50}
                 />
                 {/* Confidence indicator */}
                 <rect
@@ -95,7 +95,7 @@ export const SentimentChart: React.FC<SentimentChartProps> = ({ data, width, hei
                   width={3}
                   height={barHeight}
                   fill={isPositive ? '#16a34a' : '#dc2626'}
-                  opacity={d.confidence}
+                  opacity={sentimentData.confidence}
                 />
               </g>
             );

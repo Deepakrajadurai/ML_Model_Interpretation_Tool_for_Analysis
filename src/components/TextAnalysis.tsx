@@ -23,9 +23,9 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
   useEffect(() => {
     const reader = new FileReader();
     
-    reader.onload = (e) => {
+    reader.onload = (event) => {
       try {
-        const content = e.target?.result as string;
+        const content = event.target?.result as string;
         if (!content || content.trim().length === 0) {
           setError('The file appears to be empty or contains no readable text.');
           setLoading(false);
@@ -38,8 +38,8 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
         const results = analyzeSentiment(content);
         setSentimentResults(results);
         setLoading(false);
-      } catch (err) {
-        console.error('Error processing text file:', err);
+      } catch (error) {
+        console.error('Error processing text file:', error);
         setError('Failed to process the text file. Please ensure it contains valid text.');
         setLoading(false);
       }
@@ -64,8 +64,8 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
     if (!textContent) return null;
     try {
       return calculateTextStatistics(textContent);
-    } catch (err) {
-      console.error('Error calculating text statistics:', err);
+    } catch (error) {
+      console.error('Error calculating text statistics:', error);
       return null;
     }
   }, [textContent]);
@@ -74,8 +74,8 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
     if (!textContent) return [];
     try {
       return analyzeWordFrequency(textContent).slice(0, 50);
-    } catch (err) {
-      console.error('Error analyzing word frequency:', err);
+    } catch (error) {
+      console.error('Error analyzing word frequency:', error);
       return [];
     }
   }, [textContent]);
@@ -83,8 +83,8 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
   const overallSentiment = useMemo(() => {
     try {
       return getOverallSentiment(sentimentResults);
-    } catch (err) {
-      console.error('Error calculating overall sentiment:', err);
+    } catch (error) {
+      console.error('Error calculating overall sentiment:', error);
       return { overall: 0, confidence: 0, distribution: { positive: 0, neutral: 0, negative: 0 } };
     }
   }, [sentimentResults]);
@@ -93,8 +93,8 @@ export const TextAnalysis: React.FC<TextAnalysisProps> = ({
     if (!textContent) return [];
     try {
       return extractKeyPhrases(textContent, 8);
-    } catch (err) {
-      console.error('Error extracting key phrases:', err);
+    } catch (error) {
+      console.error('Error extracting key phrases:', error);
       return [];
     }
   }, [textContent]);
